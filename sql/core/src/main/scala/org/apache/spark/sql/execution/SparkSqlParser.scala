@@ -56,6 +56,7 @@ class SparkSqlParser extends AbstractSqlParser {
  * Builder that converts an ANTLR ParseTree into a LogicalPlan/Expression/TableIdentifier.
  */
 class SparkSqlAstBuilder extends AstBuilder {
+
   import org.apache.spark.sql.catalyst.parser.ParserUtils._
 
   private val configKeyValueDef = """([a-zA-Z_\d\\.:]+)\s*=([^;]*);*""".r
@@ -85,7 +86,8 @@ class SparkSqlAstBuilder extends AstBuilder {
   }
 
   override def visitSetQuotedConfiguration(
-      ctx: SetQuotedConfigurationContext): LogicalPlan = withOrigin(ctx) {
+                                            ctx: SetQuotedConfigurationContext): LogicalPlan
+  = withOrigin(ctx) {
     if (ctx.configValue() != null && ctx.configKey() != null) {
       SetCommand(Some(ctx.configKey().getText -> Option(ctx.configValue().getText)))
     } else if (ctx.configValue() != null) {
@@ -119,7 +121,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * }}}
    */
   override def visitResetConfiguration(
-      ctx: ResetConfigurationContext): LogicalPlan = withOrigin(ctx) {
+                                        ctx: ResetConfigurationContext): LogicalPlan
+= withOrigin(ctx) {
     remainder(ctx.RESET.getSymbol).trim match {
       case configKeyDef(key) =>
         ResetCommand(Some(key))
@@ -130,7 +133,8 @@ class SparkSqlAstBuilder extends AstBuilder {
   }
 
   override def visitResetQuotedConfiguration(
-      ctx: ResetQuotedConfigurationContext): LogicalPlan = withOrigin(ctx) {
+                                              ctx: ResetQuotedConfigurationContext): LogicalPlan
+= withOrigin(ctx) {
     ResetCommand(Some(ctx.configKey().getText))
   }
 
@@ -210,7 +214,7 @@ class SparkSqlAstBuilder extends AstBuilder {
 
     val statement = plan(ctx.statement)
     if (statement == null) {
-      null  // This is enough since ParseException will raise later.
+      null // This is enough since ParseException will raise later.
     } else {
       ExplainCommand(
         logicalPlan = statement,
@@ -237,9 +241,9 @@ class SparkSqlAstBuilder extends AstBuilder {
    * If the multi-part identifier has too many parts, this will throw a ParseException.
    */
   def tableIdentifier(
-      multipart: Seq[String],
-      command: String,
-      ctx: ParserRuleContext): TableIdentifier = {
+                       multipart: Seq[String],
+                       command: String,
+                       ctx: ParserRuleContext): TableIdentifier = {
     multipart match {
       case Seq(tableName) =>
         TableIdentifier(tableName)
@@ -280,7 +284,7 @@ class SparkSqlAstBuilder extends AstBuilder {
       val schema = Option(ctx.colTypeList()).map(createSchema)
 
       logWarning(s"CREATE TEMPORARY TABLE ... USING ... is deprecated, please use " +
-          "CREATE TEMPORARY VIEW ... USING ... instead")
+        "CREATE TEMPORARY VIEW ... USING ... instead")
 
       val table = tableIdentifier(ident, "CREATE TEMPORARY VIEW", ctx)
       val optionsWithLocation = location.map(l => options + ("path" -> l)).getOrElse(options)
@@ -293,7 +297,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * Creates a [[CreateTempViewUsing]] logical plan.
    */
   override def visitCreateTempViewUsing(
-      ctx: CreateTempViewUsingContext): LogicalPlan = withOrigin(ctx) {
+                                         ctx: CreateTempViewUsingContext): LogicalPlan
+= withOrigin(ctx) {
     CreateTempViewUsing(
       tableIdent = visitTableIdentifier(ctx.tableIdentifier()),
       userSpecifiedSchema = Option(ctx.colTypeList()).map(createSchema),
@@ -307,7 +312,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * Convert a nested constants list into a sequence of string sequences.
    */
   override def visitNestedConstantList(
-      ctx: NestedConstantListContext): Seq[Seq[String]] = withOrigin(ctx) {
+                                        ctx: NestedConstantListContext): Seq[Seq[String]]
+= withOrigin(ctx) {
     ctx.constantList.asScala.map(visitConstantList).toSeq
   }
 
@@ -322,7 +328,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * Fail an unsupported Hive native command.
    */
   override def visitFailNativeCommand(
-    ctx: FailNativeCommandContext): LogicalPlan = withOrigin(ctx) {
+                                       ctx: FailNativeCommandContext): LogicalPlan
+  = withOrigin(ctx) {
     val keywords = if (ctx.unsupportedHiveNativeCommands != null) {
       ctx.unsupportedHiveNativeCommands.children.asScala.collect {
         case n: TerminalNode => n.getText
@@ -391,9 +398,9 @@ class SparkSqlAstBuilder extends AstBuilder {
   }
 
   private def toStorageFormat(
-      location: Option[String],
-      maybeSerdeInfo: Option[SerdeInfo],
-      ctx: ParserRuleContext): CatalogStorageFormat = {
+                               location: Option[String],
+                               maybeSerdeInfo: Option[SerdeInfo],
+                               ctx: ParserRuleContext): CatalogStorageFormat = {
     if (maybeSerdeInfo.isEmpty) {
       CatalogStorageFormat.empty.copy(locationUri = location.map(CatalogUtils.stringToURI))
     } else {
@@ -477,12 +484,12 @@ class SparkSqlAstBuilder extends AstBuilder {
    * Create a [[ScriptInputOutputSchema]].
    */
   override protected def withScriptIOSchema(
-      ctx: ParserRuleContext,
-      inRowFormat: RowFormatContext,
-      recordWriter: Token,
-      outRowFormat: RowFormatContext,
-      recordReader: Token,
-      schemaLess: Boolean): ScriptInputOutputSchema = {
+                                             ctx: ParserRuleContext,
+                                             inRowFormat: RowFormatContext,
+                                             recordWriter: Token,
+                                             outRowFormat: RowFormatContext,
+                                             recordReader: Token,
+                                             schemaLess: Boolean): ScriptInputOutputSchema = {
     if (recordWriter != null || recordReader != null) {
       // TODO: what does this message mean?
       throw QueryParsingErrors.useDefinedRecordReaderOrWriterClassesError(ctx)
@@ -498,9 +505,9 @@ class SparkSqlAstBuilder extends AstBuilder {
         schemaLess)
     } else {
       def format(
-          fmt: RowFormatContext,
-          configKey: String,
-          defaultConfigValue: String): ScriptIOFormat = fmt match {
+                  fmt: RowFormatContext,
+                  configKey: String,
+                  defaultConfigValue: String): ScriptIOFormat = fmt match {
         case c: RowFormatDelimitedContext =>
           getRowFormatDelimited(c)
 
@@ -551,9 +558,9 @@ class SparkSqlAstBuilder extends AstBuilder {
    * Create a clause for DISTRIBUTE BY.
    */
   override protected def withRepartitionByExpression(
-      ctx: QueryOrganizationContext,
-      expressions: Seq[Expression],
-      query: LogicalPlan): LogicalPlan = {
+                                                      ctx: QueryOrganizationContext,
+                                                      expressions: Seq[Expression],
+                                                      query: LogicalPlan): LogicalPlan = {
     RepartitionByExpression(expressions, query, None)
   }
 
@@ -569,7 +576,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * }}}
    */
   override def visitInsertOverwriteDir(
-      ctx: InsertOverwriteDirContext): InsertDirParams = withOrigin(ctx) {
+                                        ctx: InsertOverwriteDirContext): InsertDirParams
+= withOrigin(ctx) {
     val options = Option(ctx.options).map(visitPropertyKeyValues).getOrElse(Map.empty)
     var storage = DataSource.buildStorageFormatFromOptions(options)
 
@@ -615,7 +623,8 @@ class SparkSqlAstBuilder extends AstBuilder {
    * }}}
    */
   override def visitInsertOverwriteHiveDir(
-      ctx: InsertOverwriteHiveDirContext): InsertDirParams = withOrigin(ctx) {
+                                            ctx: InsertOverwriteHiveDirContext): InsertDirParams
+= withOrigin(ctx) {
     val serdeInfo = getSerdeInfo(
       Option(ctx.rowFormat).toSeq, Option(ctx.createFileFormat).toSeq, ctx)
     val path = string(ctx.path)
@@ -632,5 +641,11 @@ class SparkSqlAstBuilder extends AstBuilder {
       serde = storage.serde.orElse(default.serde))
 
     (ctx.LOCAL != null, finalStorage, Some(DDLUtils.HIVE_PROVIDER))
+  }
+
+  override def visitShowVersion(ctx: ShowVersionContext): LogicalPlan = withOrigin(ctx) {
+    ShowVersionCommand()
+
+
   }
 }

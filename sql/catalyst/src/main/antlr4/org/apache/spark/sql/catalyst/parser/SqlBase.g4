@@ -244,6 +244,7 @@ statement
     | SET .*?                                                          #setConfiguration
     | RESET configKey                                                  #resetQuotedConfiguration
     | RESET .*?                                                        #resetConfiguration
+    | SHOW VERSION                                                     #showVersion
     | unsupportedHiveNativeCommands .*?                                #failNativeCommand
     ;
 
@@ -1229,6 +1230,7 @@ ansiNonReserved
     | UPDATE
     | USE
     | VALUES
+    | VERSION
     | VIEW
     | VIEWS
     | WINDOW
@@ -1501,6 +1503,7 @@ nonReserved
     | USE
     | USER
     | VALUES
+    | VERSION
     | VIEW
     | VIEWS
     | WHEN
@@ -1769,6 +1772,7 @@ USE: 'USE';
 USER: 'USER';
 USING: 'USING';
 VALUES: 'VALUES';
+VERSION: 'VERSION';
 VIEW: 'VIEW';
 VIEWS: 'VIEWS';
 WHEN: 'WHEN';
