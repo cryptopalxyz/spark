@@ -245,6 +245,8 @@ statement
     | RESET configKey                                                  #resetQuotedConfiguration
     | RESET .*?                                                        #resetConfiguration
     | SHOW VERSION                                                     #showVersion
+    | COMPACT TABLE target=tableIdentifier partitionSpec?
+         (INTO fileNum=INTEGER_VALUE identifier)?                      #compactTable
     | unsupportedHiveNativeCommands .*?                                #failNativeCommand
     ;
 

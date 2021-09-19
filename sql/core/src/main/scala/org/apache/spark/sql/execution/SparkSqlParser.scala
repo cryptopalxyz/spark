@@ -648,4 +648,8 @@ class SparkSqlAstBuilder extends AstBuilder {
 
 
   }
+
+  override def visitCompactTable(ctx: CompactTableContext): LogicalPlan = withOrigin(ctx) {
+    CompactTableCommand(ctx.target, ctx.fileNum)
+  }
 }
